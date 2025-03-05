@@ -2,14 +2,13 @@ import { styled } from "..";
 
 export const HomeContainer = styled('main', {
     display: 'flex',
-    // gap: '3rem' ,
     width: '100%',
     maxWidth: 'calc(100vw - ((100vw - 1180px) / 2))',
     marginLeft: 'auto',
     minHeight: 656,
 });
 
-export const Product = styled('a', {
+export const Product = styled('div', {
     background: 'linear-gradient(180deg, #EFEFEF 1%, #B1B1B1 100%);',    
     borderRadius: 8,
     cursor: 'pointer',
@@ -47,11 +46,14 @@ export const Product = styled('a', {
         transition: 'all 0.2s ease-in-out',
 
         'strong': {
-            fontSize: '$lg',
+            fontSize: '$md',
+            color: '$gray100',
         },
 
         span: {
-            fontSize: '$md',
+            fontSize: '$xl',
+            color: '$gray300',
+            fontWeight: 'bold',
         },
 
         

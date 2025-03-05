@@ -1,8 +1,8 @@
-import { AppProps } from "next/app";
 import { globalStyles } from "../styles/global";
-import logo from '../assets/logo.svg';
 import { Container, Header } from "../styles/pages/app";
 import Image from 'next/image';
+import logo from '../assets/logo.svg';
+import { AppProps } from "next/app";
 
 globalStyles();
 function App( { Component, pageProps} : AppProps) {

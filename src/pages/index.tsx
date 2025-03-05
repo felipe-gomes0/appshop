@@ -1,18 +1,21 @@
-import Image from "next/image";
-import { HomeContainer, Product } from "../styles/pages/home";
-import { GetServerSideProps } from "next";
-
-import { useKeenSlider } from 'keen-slider/react';
 import 'keen-slider/keen-slider.min.css';
+import { GetStaticProps } from "next";
+import Image from "next/image";
+import { useKeenSlider } from 'keen-slider/react';
+import Link from 'next/link';
 
-import periferico1 from '../assets/1.png'
-import periferico2 from '../assets/2.png'
-import periferico3 from '../assets/3.png'
-import periferico4 from '../assets/4.png'
-import { stripe } from "../lib/stripe";
+import { stripe } from '../lib/stripe';
+import { HomeContainer, Product } from "../styles/pages/home";
+
+// import periferico1 from '../assets/1.png'
+// import periferico2 from '../assets/2.png'
+// import periferico3 from '../assets/3.png'
+// import periferico4 from '../assets/4.png'
+
+import Stripe from "stripe";
 
 interface HomeProps {
-    Products: {
+    products: {
         id: string;
         name: string;
         imageUrl: string;
@@ -21,7 +24,7 @@ interface HomeProps {
 }
 
 
-export default function Home ({ products} : HomeProps) {
+export default function Home ({ products } : HomeProps) {
 
     const [sliderRef] = useKeenSlider({
         mode: "free-snap",
@@ -30,49 +33,33 @@ export default function Home ({ products} : HomeProps) {
             spacing: 48,
         },
     });
+  
 
 
     return (
         <HomeContainer ref={sliderRef} className="keen-slider">
-            <Product className="keen-slider__slide number-slide1">
-                <Image src={periferico1} width={520} height={480} alt=""/>
-                <footer>
-                    <strong>Akko 5075b plus v2</strong>
-                    <span>Switch Cream Blue</span>
-                </footer>
-                </Product >
-            <Product className="keen-slider__slide number-slide2">
-                <Image src={periferico2} width={520} height={480} alt=""/>
-                <footer>
-                    <strong>Logitech MX Mechanical</strong>
-                    <span>Switch Tactile Brown</span>
-                </footer>
-            </Product>
-            <Product className="keen-slider__slide number-slide3">
-                <Image src={periferico3} width={520} height={480} alt=""/>
-                <footer>
-                    <strong>Logitech MX Mechanical</strong>
-                    <span>Switch Tactile Brown</span>
-                </footer>
-            </Product>
-            <Product className="keen-slider__slide number-slide4">
-                <Image src={periferico4} width={520} height={480} alt=""/>
-                <footer>
-                    <strong>Logitech MX Master 3s</strong>
-                    <span>Clique Silencioso</span>
-                </footer>
-            </Product>
+            {products.map(product => {
+                return (
+                    <Link href={`/product/${product.id}`} key={product.id}>
+                        <Product  className="keen-slider__slide number-slide">
+                            <Image src={product.imageUrl} width={520} height={480} alt="" />
+                            <footer>
+                                <strong>{product.name}</strong>
+                                <span> {product.price}</span>
+                            </footer>
+                        </Product >
+                    </Link>
+                )
+            })}
+            
         </HomeContainer>
     )
 }
 
-export const getServerSideProps: GetServerSideProps = async () => {
+export const getStaticProps: GetStaticProps = async () => {
     const response = await stripe.products.list({
         expand: ['data.default_price'],
     });
-
-
-
 
     const products = response.data.map(product => {
         const price = product.default_price as Stripe.Price;
@@ -81,14 +68,17 @@ export const getServerSideProps: GetServerSideProps = async () => {
             name: product.name,
             description: product.description,
             imageUrl: product.images[0],
-            price: price.unit_amount / 100, 
+            price: new Intl.NumberFormat('pt-BR', {
+                style: "currency",
+                currency: "BRL",
+            }).format(price.unit_amount ? price.unit_amount / 100 : 0)
         }
-    })
-    
+    });
 
     return {
         props :{ 
             products,     
-        }
+        },
+        revalidate: 60 * 60 * 2, // 2 hours
     }
 };

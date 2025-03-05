@@ -5,16 +5,17 @@ export const globalStyles = globalCss({
         margin: 0,
         padding: 0,
         border: 0,
+        boxSizing: 'border-box',
     },
     
     body: {
-        backgroundColor: '$gray900',
+        backgroundColor: '$gray80',
         color: '$gray100'
     },
 
     'body, input, textarea, button': {
-        fontFamily: 'Robot',
-        fontWeight: 400,
+        fontFamily: 'Roboto, sans-serif',
+        fontWeight: 'bold',
     },
 
 }) ;
