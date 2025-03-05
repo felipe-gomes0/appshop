@@ -1,22 +1,33 @@
 import Image from "next/image";
 import { HomeContainer, Product } from "../styles/pages/home";
+import { GetServerSideProps } from "next";
+
+import { useKeenSlider } from 'keen-slider/react';
+import 'keen-slider/keen-slider.min.css';
 
 import periferico1 from '../assets/1.png'
 import periferico2 from '../assets/2.png'
 import periferico3 from '../assets/3.png'
 import periferico4 from '../assets/4.png'
+import { stripe } from "../lib/stripe";
 
-import { useKeenSlider } from 'keen-slider/react';
+interface HomeProps {
+    Products: {
+        id: string;
+        name: string;
+        imageUrl: string;
+        price: number;
+    }[]
+}
 
-import 'keen-slider/keen-slider.min.css';
 
-export default function Home () {
+export default function Home ({ products} : HomeProps) {
 
     const [sliderRef] = useKeenSlider({
         mode: "free-snap",
         slides: {
             perView: 3,
-            spacing: 48
+            spacing: 48,
         },
     });
 
@@ -54,3 +65,30 @@ export default function Home () {
         </HomeContainer>
     )
 }
+
+export const getServerSideProps: GetServerSideProps = async () => {
+    const response = await stripe.products.list({
+        expand: ['data.default_price'],
+    });
+
+
+
+
+    const products = response.data.map(product => {
+        const price = product.default_price as Stripe.Price;
+        return {
+            id: product.id,
+            name: product.name,
+            description: product.description,
+            imageUrl: product.images[0],
+            price: price.unit_amount / 100, 
+        }
+    })
+    
+
+    return {
+        props :{ 
+            products,     
+        }
+    }
+};
