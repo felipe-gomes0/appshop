@@ -3,6 +3,7 @@ import { GetStaticProps } from "next";
 import Image from "next/image";
 import { useKeenSlider } from 'keen-slider/react';
 import Link from 'next/link';
+import  Head  from 'next/head'
 
 import { stripe } from '../lib/stripe';
 import { HomeContainer, Product } from "../styles/pages/home";
@@ -37,7 +38,12 @@ export default function Home ({ products } : HomeProps) {
 
 
     return (
+        <>
+        <Head> 
+            <title>Web Shop</title>
+        </Head>
         <HomeContainer ref={sliderRef} className="keen-slider">
+  
             {products.map(product => {
                 return (
                     <Link href={`/product/${product.id}`} key={product.id} prefetch={false}>
@@ -53,6 +59,7 @@ export default function Home ({ products } : HomeProps) {
             })}
             
         </HomeContainer>
+        </>
     )
 }
 
