@@ -1,36 +1,71 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# App Shop
 
-## Getting Started
+Loja simples construída com Next.js (Pages Router) e TypeScript, integrada ao Stripe. O app lista produtos do Stripe, mostra detalhes do produto e cria sessões de checkout usando a API do Stripe.
+## Stack principal
 
-First, run the development server:
+- Next.js (Pages) — versão definida em `package.json`.
+- React 19 + TypeScript
+- Stripe (SDK server-side)
+- Keen-slider para carrossel de produtos
+- Axios para chamadas cliente -> API
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Como rodar localmente
+
+1. Instale dependências:
+
+```powershell
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Variáveis de ambiente (exemplo):
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```powershell
+#$env:STRIPE_SECRET_KEY = "sk_test_..."
+#$env:NEXT_URL = "http://localhost:3000"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Rodar em modo desenvolvimento:
 
-## Learn More
+```powershell
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Visite http://localhost:3000.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts úteis (package.json)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `npm run dev` — inicia Next em dev.
+- `npm run build` — build de produção.
+- `npm start` — inicia servidor de produção (após build).
+- `npm run lint` — lint do Next/ESLint.
 
-## Deploy on Vercel
+## Variáveis de ambiente necessárias
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `STRIPE_SECRET_KEY` — chave secreta do Stripe (obrigatória no servidor).
+- `NEXT_URL` — URL base usada para `success_url` e `cancel_url` no checkout.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Fluxos importantes / arquivos chave
+
+- `src/lib/stripe.ts` — inicializa o cliente Stripe; valida `STRIPE_SECRET_KEY`.
+- `src/pages/index.tsx` — lista produtos (servidor) via `stripe.products.list({ expand: ['data.default_price'] })` e renderiza carrossel (`keen-slider`). Revalidação: 2 horas.
+- `src/pages/product/[id].tsx` — recupera produto e `default_price`; revalidação: 1 hora; `getStaticPaths` usa `fallback: 'blocking'`.
+- `src/pages/api/checkout.ts` — endpoint POST que cria `stripe.checkout.sessions.create` a partir de um `priceId` recebido no body e retorna `{ checkoutUrl }`.
+- `next.config.ts` — inclui `images.domains = ['files.stripe.com']` para imagens do Stripe.
+
+## Padrões e convenções do projeto
+
+- Dados de produto: o código expande `default_price` para obter `unit_amount` e `price.id` (usado como `defaultPriceId`).
+- Formatação de preço: sempre usar `Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })`.
+- Navegação: Links para produto usam `prefetch={false}` para evitar pré-buscas de imagens.
+- Checkout: o cliente faz `POST /api/checkout` com `{ priceId }` e redireciona para `checkoutUrl` retornado.
+
+## Observações de deploy
+
+- O projeto é compatível com deploy em Vercel. Garanta que `STRIPE_SECRET_KEY` e `NEXT_URL` estejam configuradas nas variáveis de ambiente do ambiente de produção.
+- Se adicionar domínios de imagem externos, atualize `next.config.ts`.
+
+## Tempos de revalidação
+
+- Home (`index.tsx`): `revalidate: 60 * 60 * 2` (2 horas).
+- Produto (`[id].tsx`): `revalidate: 60 * 60` (1 hora).
+
